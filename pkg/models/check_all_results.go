@@ -195,8 +195,6 @@ func (m *CheckAllResults) contextValidateResponses(ctx context.Context, formats 
 		if val, ok := m.Responses[k]; ok {
 			if err := val.ContextValidate(ctx, formats); err != nil {
 				return err
-				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("hosts" + "." + strconv.Itoa(i))
 			}
 		}
 

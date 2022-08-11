@@ -5,7 +5,7 @@ pkg ?= "github.com/bloomberg/goldpinger"
 tag = $(name):$(version)
 goos ?= ${GOOS}
 goarch ?= ${GOARCH}
-namespace ?= "anandnilkal/"
+namespace ?= "cloudops/"
 files = $(shell find . -iname "*.go")
 
 
