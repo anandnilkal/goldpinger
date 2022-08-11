@@ -31,9 +31,10 @@ var PodNamespace = getPodNamespace()
 
 // GoldpingerPod contains just the basic info needed to ping and keep track of a given goldpinger pod
 type GoldpingerPod struct {
-	Name   string // Name is the name of the pod
-	PodIP  string // PodIP is the IP address of the pod
-	HostIP string // HostIP is the IP address of the host where the pod lives
+	Name     string // Name is the name of the pod
+	PodIP    string // PodIP is the IP address of the pod
+	HostIP   string // HostIP is the IP address of the host where the pod lives
+	HostName string // HostName is the name of the node where remote POD is running
 }
 
 func getPodNamespace() string {
@@ -75,6 +76,7 @@ func getHostIP(p v1.Pod) string {
 		}
 	}
 	nodeIPMap[p.Spec.NodeName] = hostIP
+	zap.L().Error("hostIp:nodeName", zap.String("hostIp", hostIP), zap.String("nodeName", p.Spec.NodeName))
 	return hostIP
 }
 
@@ -103,6 +105,11 @@ func getPodNodeName(p v1.Pod) string {
 	return p.Name
 }
 
+// getHostName will get nodename from the POD
+func getHostName(p v1.Pod) string {
+	return p.Spec.NodeName
+}
+
 // GetAllPods returns a mapping from a pod name to a pointer to a GoldpingerPod(s)
 func GetAllPods() map[string]*GoldpingerPod {
 	timer := GetLabeledKubernetesCallsTimer()
@@ -120,10 +127,12 @@ func GetAllPods() map[string]*GoldpingerPod {
 
 	podMap := make(map[string]*GoldpingerPod)
 	for _, pod := range pods.Items {
+		hostIP := getHostIP(pod)
 		podMap[pod.Name] = &GoldpingerPod{
-			Name:   getPodNodeName(pod),
-			PodIP:  getPodIP(pod),
-			HostIP: getHostIP(pod),
+			Name:     pod.Name,
+			PodIP:    getPodIP(pod),
+			HostIP:   hostIP,
+			HostName: getHostName(pod),
 		}
 	}
 	return podMap

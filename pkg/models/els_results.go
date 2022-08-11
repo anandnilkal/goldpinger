@@ -13,13 +13,13 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// DNSResults Dns results
+// ElsResults els results
 //
-// swagger:model DnsResults
-type DNSResults map[string]DNSResult
+// swagger:model ElsResults
+type ElsResults map[string]ElsResult
 
-// Validate validates this Dns results
-func (m DNSResults) Validate(formats strfmt.Registry) error {
+// Validate validates this els results
+func (m ElsResults) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	for k := range m {
@@ -46,8 +46,8 @@ func (m DNSResults) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validate this Dns results based on the context it is used
-func (m DNSResults) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validate this els results based on the context it is used
+func (m ElsResults) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
 	for k := range m {

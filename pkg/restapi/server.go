@@ -306,7 +306,7 @@ func (s *Server) Serve() (err error) {
 		}
 
 		// must have at least one certificate or panics
-		httpsServer.TLSConfig.BuildNameToCertificate()
+		// httpsServer.TLSConfig.BuildNameToCertificate()
 
 		configureServer(httpsServer, "https", s.httpsServerL.Addr().String())
 

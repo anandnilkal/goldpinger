@@ -69,6 +69,7 @@ var (
 			"call_type",
 			"host_ip",
 			"pod_ip",
+			"hostName",
 		},
 	)
 
@@ -104,6 +105,85 @@ var (
 		},
 	)
 
+	goldpingerTelnetErrorsCounter = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "goldpinger_telnet_errors_total",
+			Help: "Statistics of telnet errors per instance",
+		},
+		[]string{
+			"goldpinger_instance",
+			"host",
+		},
+	)
+
+	goldpingerELSErrorsCounter = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "goldpinger_els_errors_total",
+			Help: "Statistics of els errors per instance",
+		},
+		[]string{
+			"goldpinger_instance",
+			"host",
+		},
+	)
+
+	goldpingerTelnetHistogram = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "goldpinger_telnet_response_time_s",
+			Help:    "Histogram of response times from telnet services",
+			Buckets: []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10, 30},
+		},
+		[]string{
+			"goldpinger_instance",
+			"host",
+		},
+	)
+
+	goldpingerELSHistogram = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "goldpinger_els_response_time_s",
+			Help:    "Histogram of response times from els services",
+			Buckets: []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10, 30},
+		},
+		[]string{
+			"goldpinger_instance",
+			"host",
+		},
+	)
+
+	goldpingerTelnetConnectivityGauge = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "goldpinger_telnet_connectivity",
+			Help: "1 if connectivity pass, 0 otherwise",
+		},
+		[]string{
+			"goldpinger_instance",
+			"host",
+		},
+	)
+
+	goldpingerELSConnectivityGauge = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "goldpinger_els_connectivity",
+			Help: "1 if connectivity pass, 0 otherwise",
+		},
+		[]string{
+			"goldpinger_instance",
+			"host",
+		},
+	)
+
+	goldpingerPeerConnectivityGauge = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "goldpinger_peer_connectivity",
+			Help: "Peer connectivity status",
+		},
+		[]string{
+			"goldpinger_instance",
+			"host",
+		},
+	)
+
 	bootTime = time.Now()
 )
 
@@ -115,6 +195,13 @@ func init() {
 	prometheus.MustRegister(goldpingerResponseTimeKubernetesHistogram)
 	prometheus.MustRegister(goldpingerErrorsCounter)
 	prometheus.MustRegister(goldpingerDnsErrorsCounter)
+	prometheus.MustRegister(goldpingerELSErrorsCounter)
+	prometheus.MustRegister(goldpingerTelnetErrorsCounter)
+	prometheus.MustRegister(goldpingerELSHistogram)
+	prometheus.MustRegister(goldpingerTelnetHistogram)
+	prometheus.MustRegister(goldpingerTelnetConnectivityGauge)
+	prometheus.MustRegister(goldpingerELSConnectivityGauge)
+	prometheus.MustRegister(goldpingerPeerConnectivityGauge)
 	zap.L().Info("Metrics setup - see /metrics")
 }
 
@@ -173,6 +260,22 @@ func CountDnsError(host string) {
 	).Inc()
 }
 
+// counts instances of telnet errors
+func CountTelnetError(host string) {
+	goldpingerTelnetErrorsCounter.WithLabelValues(
+		GoldpingerConfig.Hostname,
+		host,
+	).Inc()
+}
+
+// counts instances of ELS errors
+func CountElsError(host string) {
+	goldpingerELSErrorsCounter.WithLabelValues(
+		GoldpingerConfig.Hostname,
+		host,
+	).Inc()
+}
+
 // returns a timer for easy observing of the durations of calls to kubernetes API
 func GetLabeledKubernetesCallsTimer() *prometheus.Timer {
 	return prometheus.NewTimer(
@@ -192,4 +295,60 @@ func GetLabeledPeersCallsTimer(callType, hostIP, podIP string) *prometheus.Timer
 			podIP,
 		),
 	)
+}
+
+// returns a timer for easy observing of the duration of calls to telnet peers
+func GetLabeledTelnetCallsTimer(host string) *prometheus.Timer {
+	return prometheus.NewTimer(
+		goldpingerTelnetHistogram.WithLabelValues(
+			GoldpingerConfig.Hostname,
+			host,
+		),
+	)
+}
+
+// returns a timer for easy observing of the duration of calls to ELS peers
+func GetLabeledELSCallsTimer(host string) *prometheus.Timer {
+	return prometheus.NewTimer(
+		goldpingerELSHistogram.WithLabelValues(
+			GoldpingerConfig.Hostname,
+			host,
+		),
+	)
+}
+
+// SetTelnetConnectivityStatus sets the telnet endpoint connectivity gauge to 1 (healthy) or 0 (unhealthy)
+func SetTelnetConnectivityStatus(healthy bool, host string) {
+	value := 1.0
+	if !healthy {
+		value = 0
+	}
+	goldpingerTelnetConnectivityGauge.WithLabelValues(
+		GoldpingerConfig.Hostname,
+		host,
+	).Set(value)
+}
+
+// SetELSConnectivityStatus sets the ELS endpoint connectivity gauge to 1 (healthy) or 0 (unhealthy)
+func SetELSConnectivityStatus(healthy bool, host string) {
+	value := 1.0
+	if !healthy {
+		value = 0
+	}
+	goldpingerELSConnectivityGauge.WithLabelValues(
+		GoldpingerConfig.Hostname,
+		host,
+	).Set(value)
+}
+
+// SetPeerConnectivityStatus sets the Peer endpoint connectivity gauge to 1 (healthy) or 0 (unhealthy)
+func SetPeerConnectivityStatus(healthy bool, host string) {
+	value := 1.0
+	if !healthy {
+		value = 0
+	}
+	goldpingerPeerConnectivityGauge.WithLabelValues(
+		GoldpingerConfig.Hostname,
+		host,
+	).Set(value)
 }

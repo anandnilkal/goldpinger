@@ -1,11 +1,11 @@
 name ?= goldpinger
-version ?= v3.4.0
+version ?= v3.4.20
 bin ?= goldpinger
 pkg ?= "github.com/bloomberg/goldpinger"
 tag = $(name):$(version)
 goos ?= ${GOOS}
 goarch ?= ${GOARCH}
-namespace ?= "bloomberg/"
+namespace ?= "anandnilkal/"
 files = $(shell find . -iname "*.go")
 
 

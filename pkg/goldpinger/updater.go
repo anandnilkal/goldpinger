@@ -130,8 +130,10 @@ func destroyPingers(pingers map[string]*Pinger, deletedPods map[string]*Goldping
 			zap.String("name", podName),
 			zap.String("podIP", pod.PodIP),
 			zap.String("hostIP", pod.HostIP),
+			zap.String("hostname", pod.HostName),
 		)
 		pinger := pingers[podName]
+		SetPeerConnectivityStatus(false, pinger.hostname)
 
 		// Close the channel to stop pinging
 		close(pinger.stopChan)
@@ -158,6 +160,28 @@ func updateCounters() {
 	go func(healthySoFar bool) {
 		if healthySoFar {
 			for _, response := range *checkDNS() {
+				if response.Error != "" {
+					healthySoFar = false
+					break
+				}
+			}
+		}
+		SetClusterHealth(healthySoFar)
+	}(nodesHealthy)
+	go func(healthySoFar bool) {
+		if healthySoFar {
+			for _, response := range *checkTelnet() {
+				if response.Error != "" {
+					healthySoFar = false
+					break
+				}
+			}
+		}
+		SetClusterHealth(healthySoFar)
+	}(nodesHealthy)
+	go func(healthySoFar bool) {
+		if healthySoFar {
+			for _, response := range *checkELS() {
 				if response.Error != "" {
 					healthySoFar = false
 					break

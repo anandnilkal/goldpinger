@@ -278,6 +278,26 @@ func init() {
         "$ref": "#/definitions/DnsResult"
       }
     },
+    "ElsResult": {
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "ping": {
+          "type": "integer"
+        },
+        "response-time-ms": {
+          "type": "number",
+          "format": "int64"
+        }
+      }
+    },
+    "ElsResults": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/ElsResult"
+      }
+    },
     "HealthCheckResults": {
       "type": "object",
       "properties": {
@@ -341,6 +361,26 @@ func init() {
           "type": "integer",
           "format": "int32"
         }
+      }
+    },
+    "TelnetResult": {
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "ping": {
+          "type": "integer"
+        },
+        "response-time-ms": {
+          "type": "number",
+          "format": "int64"
+        }
+      }
+    },
+    "TelnetResults": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/TelnetResult"
       }
     }
   }
@@ -609,6 +649,26 @@ func init() {
         "$ref": "#/definitions/DnsResult"
       }
     },
+    "ElsResult": {
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "ping": {
+          "type": "integer"
+        },
+        "response-time-ms": {
+          "type": "number",
+          "format": "int64"
+        }
+      }
+    },
+    "ElsResults": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/ElsResult"
+      }
+    },
     "HealthCheckResults": {
       "type": "object",
       "properties": {
@@ -672,6 +732,26 @@ func init() {
           "type": "integer",
           "format": "int32"
         }
+      }
+    },
+    "TelnetResult": {
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "ping": {
+          "type": "integer"
+        },
+        "response-time-ms": {
+          "type": "number",
+          "format": "int64"
+        }
+      }
+    },
+    "TelnetResults": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/TelnetResult"
       }
     }
   }

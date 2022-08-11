@@ -16,8 +16,11 @@ package goldpinger
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
+	"fmt"
 	"net"
+	"net/http"
 	"sort"
 	"strconv"
 	"sync"
@@ -28,6 +31,9 @@ import (
 	"github.com/bloomberg/goldpinger/v3/pkg/models"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+	opensearch "github.com/opensearch-project/opensearch-go"
+	opensearchapi "github.com/opensearch-project/opensearch-go/opensearchapi"
+	telnet "github.com/reiver/go-telnet"
 	"go.uber.org/zap"
 )
 
@@ -276,3 +282,73 @@ func getClient(hostIP string) (*apiclient.Goldpinger, error) {
 
 	return client, nil
 }
+
+func checkTelnet() *models.TelnetResults {
+	results := models.TelnetResults{}
+	for _, host := range GoldpingerConfig.TelnetHosts {
+		var telnetResult models.TelnetResult
+		start := time.Now()
+		histogram := goldpingerTelnetHistogram.WithLabelValues(
+			GoldpingerConfig.Hostname,
+			host,
+		)
+		_, err := telnet.DialTo(fmt.Sprintf("%s:%d", host, 3306))
+		if err != nil {
+			telnetResult.Error = err.Error()
+			CountTelnetError(host)
+			SetTelnetConnectivityStatus(false, host)
+			continue
+		}
+		responseTime := time.Since(start)
+		telnetResult.ResponseTimeMs = int64(responseTime.Nanoseconds()) / int64(time.Millisecond)
+		histogram.Observe(responseTime.Seconds())
+		SetTelnetConnectivityStatus(true, host)
+		results[host] = telnetResult
+	}
+	return &results
+}
+
+func checkELS() *models.ElsResults {
+	results := models.ElsResults{}
+	for _, host := range GoldpingerConfig.ElsHosts {
+		var elsResult models.ElsResult
+		start := time.Now()
+		histogram := goldpingerELSHistogram.WithLabelValues(
+			GoldpingerConfig.Hostname,
+			host,
+		)
+		client, err := opensearch.NewClient(opensearch.Config{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			},
+			Addresses: []string{host},
+		})
+		if err != nil {
+			CountElsError(host)
+			SetELSConnectivityStatus(false, host)
+			continue
+		}
+		req := opensearchapi.ClusterHealthRequest{
+			Pretty: true,
+			Human:  true,
+		}
+		response, err := req.Do(context.TODO(), client)
+		if err != nil {
+			CountElsError(host)
+			SetELSConnectivityStatus(false, host)
+			continue
+		}
+		responseTime := time.Since(start)
+		if response.StatusCode != http.StatusOK {
+			CountElsError(host)
+			SetELSConnectivityStatus(false, host)
+			continue
+		}
+		elsResult.ResponseTimeMs = int64(responseTime.Nanoseconds()) / int64(time.Millisecond)
+		histogram.Observe(responseTime.Seconds())
+		SetELSConnectivityStatus(true, host)
+		results[host] = elsResult
+	}
+	return &results
+}
+

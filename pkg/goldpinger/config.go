@@ -35,7 +35,9 @@ var GoldpingerConfig = struct {
 	DisplayNodeName  bool    `long:"display-nodename" description:"Display nodename other than podname in UI (defaults is podname)." env:"DISPLAY_NODENAME"`
 	KubernetesClient *kubernetes.Clientset
 
-	DnsHosts []string `long:"host-to-resolve" description:"A host to attempt dns resolve on (space delimited)" env:"HOSTS_TO_RESOLVE" env-delim:" "`
+	DnsHosts    []string `long:"host-to-resolve" description:"A host to attempt dns resolve on (space delimited)" env:"HOSTS_TO_RESOLVE" env-delim:" "`
+	TelnetHosts []string `long:"telnet-hosts" description:"An external host to telnet" env:"TELNET_HOSTS" env-delim:" "`
+	ElsHosts    []string `long:"els-hosts" description:"An external ELS host to ping" env:"ELS_HOSTS" env-delim:" "`
 
 	IPVersions []string `long:"ip-versions" description:"The IP versions to use (space delimited). Possible values are 4 and 6 (defaults to 4)." env:"IP_VERSIONS" env-delim:" "`
 

@@ -4,6 +4,32 @@ info:
   version: 3.0.0
   title: Goldpinger
 definitions:
+  TelnetResult:
+    properties:
+      ping:
+        type: integer
+      response-time-ms:
+        type: number
+        format: int64
+      error:
+        type: string
+  TelnetResults:
+    type: object
+    additionalProperties:
+      $ref: '#/definitions/TelnetResult'
+  ElsResult:
+    properties:
+      ping:
+        type: integer
+      response-time-ms:
+        type: number
+        format: int64
+      error:
+        type: string
+  ElsResults:
+    type: object
+    additionalProperties:
+      $ref: '#/definitions/ElsResult'
   CallStats:
     properties:
       check:

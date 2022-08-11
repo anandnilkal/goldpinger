@@ -36,6 +36,7 @@ type Pinger struct {
 	histogram   prometheus.Observer
 	hostIPv4    strfmt.IPv4
 	podIPv4     strfmt.IPv4
+	hostname    string
 	resultsChan chan<- PingAllPodsResult
 	stopChan    chan struct{}
 	logger      *zap.Logger
@@ -55,6 +56,7 @@ func NewPinger(pod *GoldpingerPod, resultsChan chan<- PingAllPodsResult) *Pinger
 			"ping",
 			pod.HostIP,
 			pod.PodIP,
+			pod.HostName,
 		),
 
 		logger: zap.L().With(
@@ -62,12 +64,14 @@ func NewPinger(pod *GoldpingerPod, resultsChan chan<- PingAllPodsResult) *Pinger
 			zap.String("name", pod.Name),
 			zap.String("hostIP", pod.HostIP),
 			zap.String("podIP", pod.PodIP),
+			zap.String("hostname", pod.HostName),
 		),
 	}
 
 	// Initialize the host/pod IPv4
 	p.hostIPv4.UnmarshalText([]byte(pod.HostIP))
 	p.podIPv4.UnmarshalText([]byte(pod.PodIP))
+	p.hostname = pod.HostName
 
 	return &p
 }
@@ -134,6 +138,7 @@ func (p *Pinger) Ping() {
 				ResponseTimeMs: responseTimeMs,
 			},
 		}
+		SetPeerConnectivityStatus(true, string(p.pod.HostName))
 		p.logger.Debug("Success pinging pod", zap.Duration("responseTime", responseTime))
 	} else {
 		p.resultsChan <- PingAllPodsResult{
@@ -148,6 +153,7 @@ func (p *Pinger) Ping() {
 				ResponseTimeMs: responseTimeMs,
 			},
 		}
+		SetPeerConnectivityStatus(false, string(p.pod.HostName))
 		p.logger.Warn("Ping returned error", zap.Duration("responseTime", responseTime), zap.Error(err))
 		CountError("ping")
 	}
